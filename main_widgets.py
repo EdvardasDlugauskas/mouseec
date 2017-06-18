@@ -2,30 +2,20 @@ import logging
 
 from kivy.app import App
 from kivy.effects.dampedscroll import DampedScrollEffect
+from kivy.effects.scroll import ScrollEffect
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
 from kivy.uix.scrollview import ScrollView
+from kivy.properties import StringProperty, OptionProperty, ObjectProperty
 from kivymd.dialog import MDDialog
 from kivymd.grid import SmartTile
 from kivymd.label import MDLabel
 from kivymd.list import ILeftBody, IRightBody, OneLineAvatarIconListItem, MDList
 from kivymd.menu import MDDropdownMenu
+from kivymd.tabs import MDTab
 
 from utils import call_control
-
-
-class Audio:
-	_widget = None
-
-	def __init__(self, file):
-		self.file = file
-
-	def get_widget(self):
-		if not self._widget:
-			logging.info(f"Loading new AudioEntry for {self.file.name}")
-			self._widget = AudioEntry(self.file)
-		return self._widget
 
 
 class ParamGridLayout(GridLayout):
@@ -36,11 +26,12 @@ class ParamLabel(MDLabel):
 	pass
 
 
-class SmartScrollEffect(DampedScrollEffect):
-	spring_constant = 5
+class SmartScrollEffect(ScrollEffect):  # (DampedScrollEffect):
+	#spring_constant = 10
 
 	def on_overscroll(self, *args):
-		super().on_overscroll(*args)
+		# super().on_overscroll(*args)
+
 		if 100 > self.overscroll > 0:
 			self.load_new_entries()
 		if self.overscroll < -500:
@@ -48,14 +39,14 @@ class SmartScrollEffect(DampedScrollEffect):
 
 	@call_control(max_call_interval=0.1)
 	def load_new_entries(self):
-		App.get_running_app().main_screen.ids.name_scroll.load_extra_entries()
+		App.get_running_app().main_screen.ids.all_songs.ids.name_scroll.load_extra_entries()
 
 
 class SmartScrollview(ScrollView):
 	effect_cls = SmartScrollEffect
 
 	def on_scroll_y(self, *args):
-		if self.scroll_y < 0.02:
+		if self.scroll_y < 0.07:
 			self.load_extra_entries()
 
 
@@ -68,10 +59,13 @@ class RightIconBox(BoxLayout, IRightBody):
 
 
 class AudioEntry(OneLineAvatarIconListItem):
+	#label = ObjectProperty(MDLabel(size_hint_x=None, width=35, font_style="Body1"))
+	display_mode = StringProperty()
+
 	def __init__(self, audio_file, **kwargs):
 		super().__init__(**kwargs)
 		self.audio_file = audio_file
-		self.text = audio_file.name  # audio_file.name
+		self.text = audio_file.name
 		self.secondary_text = str(dict(self.audio_file.params)).replace("{", "").replace("}", "")
 
 		if audio_file.kivy_image:
@@ -86,17 +80,33 @@ class AudioEntry(OneLineAvatarIconListItem):
 			     on_release=self.info_dialog),
 		]
 
-		right_box = RightIconBox()
-		bitrate = self.audio_file.bitrate
-		if bitrate < 150:
-			right_box.add_widget(MDLabel(text=self.audio_file.bitrate_str, text_color=(1, 0.2, 0.2, 0.7),
-			                             theme_text_color="Custom", font_style="Body1", size_hint_x=None, width=35))
+	def on_display_mode(self, *args):
+		text = text_color = ""
+		theme_text_color = "Hint"
 
-		elif bitrate < 250:
-			right_box.add_widget(MDLabel(text=self.audio_file.bitrate_str, theme_text_color="Hint",
-			                             font_style="Body1", size_hint_x=None, width=35))
+		if self.display_mode == "bitrate":
+			bitrate = self.audio_file.bitrate
+			if bitrate < 150:
+				text = self.audio_file.bitrate_str
+				text_color = (1, 0.2, 0.2, 0.7)
+				theme_text_color = "Custom"
+			else:
+				text = self.audio_file.bitrate_str
 
-		self.add_widget(right_box)
+		elif self.display_mode == "date":
+			text = str(self.audio_file.date)
+
+		elif self.display_mode == "moods":
+			text = str(self.audio_file.moods)
+
+		elif self.display_mode == "images":
+			text = f"{len(self.audio_file.images)} images"
+			theme_text_color = "Hint"
+
+		label = self.ids.label
+		label.text = text
+		label.theme_text_color = theme_text_color
+		label.text_color = text_color if text_color else label.text_color
 
 	def on_touch_up(self, touch):
 		super().on_touch_up(touch)
@@ -105,7 +115,6 @@ class AudioEntry(OneLineAvatarIconListItem):
 				MDDropdownMenu(items=self.menu_items, width_mult=2).open(touch, touch=True)
 
 	def edit(self):
-		print(self.height)
 		print("Editing")
 
 	def info_dialog(self):

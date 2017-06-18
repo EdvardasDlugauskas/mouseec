@@ -44,55 +44,96 @@
     MDBottomNavigation:
         id: bottom_navigation
 
-        MDBottomNavigationItem:
-            name: "all_songs"
-            text: "All"
-            icon: "home"#"file-music"#"music-box"#"library-music"
+        AllSongsScreen:
+            id: all_songs
 
-            MDSpinner:
-                id: spinner
-                size_hint: None, None
-                size: dp(46), dp(46)
-                pos_hint: {'center_x': 0.5, 'center_y': 0.5}
-                active: True
-
-            BoxLayout:
-                orientation: "vertical"
-                BoxLayout:
-                    orientation: "horizontal"
-                    size_hint_y: None
-                    height: 60
-                    spacing: 5
-
-                    MDIconButton:
-                        icon: "filter-outline"
-                        on_release: MDDropdownMenu(items=name_scroll.filter_menu_items, width_mult=2).open(self)
+        MoodsScreen:
 
 
-                    MDTextField:
-                        id: search_field
-                        hint_text: "Quick Search"
-                        on_text:
-                            name_scroll.run_search_countdown(self.text)
-                        size_hint_y: None
-                        height: self.parent.height * 0.8
+<AllSongsScreen@MDBottomNavigationItem>:
+    name: "all_songs"
+    text: "All"
+    icon: "home"#"file-music"#"music-box"#"library-music"
 
-                    MDIconButton:
-                        icon: "dots-vertical"
-                        on_release:
-                            MDDropdownMenu(items=name_scroll.options_menu_items, width_mult=2).open(self)
+    MDSpinner:
+        id: spinner
+        size_hint: None, None
+        size: dp(46), dp(46)
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+        active: True
 
-                #ScrollView:
-                AudioListScroller:
-                    id: name_scroll
+    BoxLayout:
+        orientation: "vertical"
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: None
+            height: 60
+            spacing: 5
+
+            MDIconButton:
+                icon: "filter-outline"
+                on_release:
+                    MDDropdownMenu(items=name_scroll.filter_menu_items, width_mult=2).open(self)
 
 
-        #MDBottomNavigationItem:
-        #    name: "new_playlist"
-        #    text: "New Playlists"
-        #    icon: "library-music"
+            MDTextField:
+                id: search_field
+                hint_text: "Quick Search"
+                on_text:
+                    name_scroll.run_search_countdown(self.text)
+                size_hint_y: None
+                height: self.parent.height * 0.8
+
+            MDIconButton:
+                icon: "dots-vertical"
+                on_release:
+                    MDDropdownMenu(items=name_scroll.options_menu_items, width_mult=2).open(self)
+
+        AudioListScroller:
+            id: name_scroll
+            root: self.root
 
 
+<MoodsScreen>:
+    name: "moods"
+    text: "Moods"
+    icon: "music-note"#"file-music"#"music-box"#"library-music"
+
+    MDTabbedPanel:
+        id: mood_tabs
+        tab_display_mode:'text'
+        #MDTab:
+        #    name: "Dark"
+        #    text: "Dark"
+            #AudioListScroller:
+               #id: songs_in_mood
+                #root: self.root
+
+        #MDTab:
+        #    name: "Light"
+        #    text: "Light"
+            #AudioListScroller:
+                #id: songs_in_mood
+                #root: self.root
+
+<MoodTab>:
+    BoxLayout:
+        orientation: "horizontal"
+        size_hint_y: None
+        pos_hint: {'top': 1}
+        height:  45
+        MDIconButton:
+            disabled: True
+            icon: root.icon
+            size_hint_x: None
+            width: 45
+        MDLabel:
+            font_style: "Title"
+            theme_text_color: "Secondary"  # "Primary"
+            text: root.mood.name
+
+    AudioListScroller:
+        id: scroller
 
 <AudioListScroller>:
     do_scroll_x: False
@@ -106,3 +147,10 @@
     LeftAvatar:
         id: avatar
         source: "./rainbow_checkerboard.jpg"
+
+    RightIconBox:
+        size_hint_x: None
+        width: 65
+        MDLabel:
+            id: label
+            font_style: "Body1"
